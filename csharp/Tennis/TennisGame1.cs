@@ -1,82 +1,56 @@
+using System;
+using System.Collections.Generic;
+
 namespace Tennis
 {
-    class TennisGame1 : ITennisGame
+    public class TennisGame1 : ITennisGame
     {
-        private int m_score1 = 0;
-        private int m_score2 = 0;
-        private string player1Name;
-        private string player2Name;
+        private readonly Player _player1;
+        private readonly Player _player2;
+        private readonly Dictionary<string, Player> _playerLookup = new Dictionary<string, Player>();
 
+        /// <summary>
+        ///     Creates games with two players and adds players
+        ///     into a look up table.
+        /// </summary>
+        /// <param name="player1Name"></param>
+        /// <param name="player2Name"></param>
         public TennisGame1(string player1Name, string player2Name)
         {
-            this.player1Name = player1Name;
-            this.player2Name = player2Name;
+            if (player1Name == player2Name)
+            {
+                throw new ArgumentException("Ambiguous player names, can't distinguish");
+            }
+
+            _player1 = new Player(player1Name);
+            _playerLookup.Add(_player1.Name, _player1);
+            _player2 = new Player(player2Name);
+            _playerLookup.Add(_player2.Name, _player2);
         }
 
+        /// <summary>
+        ///     Looks up player by name and increments player's points.
+        /// </summary>
+        /// <param name="playerName"></param>
         public void WonPoint(string playerName)
         {
-            if (playerName == "player1")
-                m_score1 += 1;
+            if (_playerLookup.TryGetValue(playerName, out var pointWinner))
+            {
+                pointWinner.AddPoint();
+            }
             else
-                m_score2 += 1;
+            {
+                throw new ArgumentException("Invalid player");
+            }
         }
 
+        /// <summary>
+        ///     Get the score in tennis terminology.
+        /// </summary>
+        /// <returns></returns>
         public string GetScore()
         {
-            string score = "";
-            var tempScore = 0;
-            if (m_score1 == m_score2)
-            {
-                switch (m_score1)
-                {
-                    case 0:
-                        score = "Love-All";
-                        break;
-                    case 1:
-                        score = "Fifteen-All";
-                        break;
-                    case 2:
-                        score = "Thirty-All";
-                        break;
-                    default:
-                        score = "Deuce";
-                        break;
-
-                }
-            }
-            else if (m_score1 >= 4 || m_score2 >= 4)
-            {
-                var minusResult = m_score1 - m_score2;
-                if (minusResult == 1) score = "Advantage player1";
-                else if (minusResult == -1) score = "Advantage player2";
-                else if (minusResult >= 2) score = "Win for player1";
-                else score = "Win for player2";
-            }
-            else
-            {
-                for (var i = 1; i < 3; i++)
-                {
-                    if (i == 1) tempScore = m_score1;
-                    else { score += "-"; tempScore = m_score2; }
-                    switch (tempScore)
-                    {
-                        case 0:
-                            score += "Love";
-                            break;
-                        case 1:
-                            score += "Fifteen";
-                            break;
-                        case 2:
-                            score += "Thirty";
-                            break;
-                        case 3:
-                            score += "Forty";
-                            break;
-                    }
-                }
-            }
-            return score;
+            return ScoreConverter.GetScore(_player1, _player2);
         }
     }
 }
-
